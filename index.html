@@ -3,284 +3,353 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinematic Train Window (CSS & JS)</title>
-    
-    <!-- font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+    <title>Sanju Singh | Cinematic Akatsuki WebGL</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@1,400;1,500&display=swap');
+
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-
-        body, html {
+        
+        html, body {
             width: 100%;
             height: 100%;
+            background-color: #030407; 
+            font-family: 'Inter', -apple-system, sans-serif;
             overflow: hidden;
-            background-color: #050505; 
-            font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
         }
 
-        .scene-container {
-            position: relative;
+        #webgl-container {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100vw;
             height: 100vh;
-            overflow: hidden;
-            perspective: 1000px; 
-        }
-
-        .landscape {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            will-change: transform; 
-            transform-origin: center center;
-            transform: scale(1.08); /* buffer for shaking */
-        }
-
-        .sky {
-            position: absolute;
-            inset: -10%; 
-            background: linear-gradient(
-                170deg, 
-                #0b101c 0%, 
-                #1e2a3f 30%, 
-                #4a3f4e 55%, 
-                #a85c53 75%, 
-                #db9261 90%, 
-                #fcd181 100%
-            );
             z-index: 1;
         }
 
-        .sun-flare {
+        .header-nav {
             position: absolute;
-            top: 25%;
-            left: -10%;
-            width: 80vw;
-            height: 80vw;
-            background: radial-gradient(circle at center, rgba(255, 230, 180, 0.8) 0%, rgba(250, 140, 70, 0.3) 25%, transparent 60%);
-            border-radius: 50%;
-            filter: blur(40px);
-            mix-blend-mode: screen;
-            z-index: 2;
-        }
-
-        .ambient-flare {
-            position: absolute;
-            bottom: -20%;
-            right: -20%;
-            width: 70vw;
-            height: 70vw;
-            background: radial-gradient(circle at center, rgba(160, 90, 80, 0.4) 0%, transparent 60%);
-            filter: blur(60px);
-            z-index: 2;
-        }
-
-        .clouds-container {
-            position: absolute;
-            inset: 0;
-            z-index: 3;
-            pointer-events: none;
-        }
-
-        .cloud {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            filter: blur(40px);
-            will-change: transform;
-            animation: drift linear infinite;
-        }
-
-        /* cloud variations */
-        .cloud-1 {
-            top: 40%;
-            width: 50vw;
-            height: 15vh;
-            background: rgba(80, 60, 70, 0.8);
-            filter: blur(50px);
-            animation-duration: 45s;
-            animation-delay: -10s;
-        }
-
-        .cloud-2 {
-            top: 55%;
-            width: 60vw;
-            height: 20vh;
-            background: rgba(180, 100, 80, 0.5);
-            filter: blur(35px);
-            animation-duration: 30s;
-            animation-delay: -5s;
-        }
-
-        .cloud-3 {
-            top: 20%;
-            width: 40vw;
-            height: 12vh;
-            background: rgba(120, 110, 140, 0.4);
-            filter: blur(45px);
-            animation-duration: 38s;
-            animation-delay: -20s;
-        }
-
-        .cloud-4 {
-            top: 65%;
-            width: 80vw;
-            height: 25vh;
-            background: rgba(255, 200, 150, 0.4);
-            filter: blur(60px);
-            animation-duration: 18s;
-            animation-delay: 0s;
-        }
-
-        .cloud-5 {
-            top: 75%;
-            width: 120vw;
-            height: 30vh;
-            background: rgba(240, 170, 120, 0.6);
-            filter: blur(50px);
-            animation-duration: 22s;
-            animation-delay: -12s;
-        }
-
-        @keyframes drift {
-            0% { transform: translateX(120vw) scale(1); }
-            100% { transform: translateX(-120vw) scale(1.2); }
-        }
-
-        .window-frame {
-            position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 2.5rem 3.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             z-index: 10;
-            pointer-events: none;
-            border-radius: 8vmin;
-            box-shadow: 
-                0 0 0 100vmax #18181a, 
-                inset 0 0 20px 5px rgba(0,0,0,0.9), 
-                inset 10px 10px 40px 10px rgba(0,0,0,0.7), 
-                inset 30px 0 80px -10px rgba(255, 140, 70, 0.15); 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            margin: 6vmin; 
-        }
-
-        /* film grain */
-        .film-grain {
-            position: absolute;
-            inset: 0;
-            z-index: 20; 
-            pointer-events: none;
-            opacity: 0.12;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            mix-blend-mode: overlay;
-        }
-
-        .ui-overlay {
-            position: absolute;
-            left: calc(6vmin + 30px); 
-            bottom: calc(6vmin + 25px);
-            z-index: 30;
-            pointer-events: none;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.75rem;
-            line-height: 1.6;
-            letter-spacing: 0.1em;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
 
-        .ui-highlight {
-            color: rgba(255, 200, 120, 0.9);
-            font-weight: 700;
+        .logo-brand {
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            color: #ffffff;
         }
 
-        /* cursor blink */
-        .blink {
-            animation: blinker 1s linear infinite;
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 3rem;
+            opacity: 0.6;
+            transition: opacity 0.3s ease, text-shadow 0.3s ease;
         }
-        @keyframes blinker {
-            50% { opacity: 0; }
+
+        .nav-links a:hover {
+            opacity: 1;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .hero-text-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            text-align: center;
+            pointer-events: none; 
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .hero-text-overlay h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 500;
+            font-style: italic;
+            margin-bottom: 1rem;
+            letter-spacing: 0.1em;
+            color: #ffffff;
+            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .hero-text-overlay p {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #a0a0a5;
+            font-weight: 300;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
         }
     </style>
+
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
 
-    <div class="scene-container">
-        
-        <div class="landscape" id="landscape">
-            <div class="sky"></div>
-            <div class="sun-flare"></div>
-            <div class="ambient-flare"></div>
+    <header class="header-nav">
+        <div class="logo-brand">AKATSUKI</div>
+        <nav class="nav-links">
             
-            <div class="clouds-container">
-                <div class="cloud cloud-1"></div>
-                <div class="cloud cloud-2"></div>
-                <div class="cloud cloud-3"></div>
-                <div class="cloud cloud-4"></div>
-                <div class="cloud cloud-5"></div>
-            </div>
-        </div>
+        </nav>
+    </header>
 
-        <div class="window-frame"></div>
-        <div class="film-grain"></div>
+    <div id="webgl-container"></div>
+
+    <div class="hero-text-overlay">
+        <h1></h1>
         
-        <div class="ui-overlay">
-            INTERPLANETARY TRANSIT // <span class="ui-highlight">SEE YOU SPACE COWBOY...</span><br>
-            SYS.TIME <span id="clock" class="ui-highlight">00:00:00</span> <span class="blink">_</span>
-        </div>
-
     </div>
 
     <script>
-        // clock logic
-        function updateClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock(); 
+        // basic scene setup
+        const container = document.getElementById('webgl-container');
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x030407, 1);
+        container.appendChild(renderer.domElement);
 
-        // rumble animation
-        const landscape = document.getElementById('landscape');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x030407, 0.0015);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+        camera.position.z = 450;
+
+        // add bloom post-processing
+        const renderScene = new THREE.RenderPass(scene, camera);
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 2.2, 0.8, 0.1);
+        const composer = new THREE.EffectComposer(renderer);
+        composer.addPass(renderScene);
+        composer.addPass(bloomPass);
+
+        // generate mask using canvas
+        const canvasSize = 512;
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = canvasSize;
+        maskCanvas.height = canvasSize;
+        const ctx = maskCanvas.getContext('2d', { willReadFrequently: true });
+
+        // svg path for the cloud
+        const cloudSVGPath = "M358.3,254.7c-3.1-23.7-22.3-42-46-42c-2.3,0-4.5,0.2-6.7,0.5c-7.2-24.8-30.2-43.1-57.5-43.1c-14,0-26.8,4.8-37.1,12.8c-10-18.7-29.6-31.5-52.1-31.5c-29.5,0-54,21.8-57.9,50.1c-2.1-0.3-4.3-0.5-6.6-0.5c-27.6,0-50,22.4-50,50c0,16.2,7.7,30.5,19.6,39.6c-4.4,5.4-7.1,12.4-7.1,20c0,17.7,14.3,32,32,32c7.8,0,15-2.8,20.5-7.4c9.9,13.2,25.6,21.7,43.3,21.7c26.1,0,47.9-18.4,52.3-42.9c3.2,0.8,6.5,1.2,10,1.2c24.6,0,45.2-17.7,49.5-41.1c6,5.3,13.8,8.5,22.3,8.5c18.8,0,34-15.2,34-34C366.8,269.8,363.5,261.2,358.3,254.7z";
+        const path2d = new Path2D(cloudSVGPath);
+
+        // draw red background fill
+        ctx.setTransform(1, 0, 0, 1, 0, 0); 
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
+        ctx.translate(50, 10); 
+        ctx.fillStyle = '#ff0000';
+        ctx.fill(path2d);
+        const bodyData = ctx.getImageData(0, 0, canvasSize, canvasSize).data;
+
+        // draw white borders and inner accents
+        ctx.setTransform(1, 0, 0, 1, 0, 0); 
+        ctx.clearRect(0, 0, canvasSize, canvasSize); 
         
-        function animateRumble(time) {
-            // to seconds
-            const t = time * 0.001; 
+        ctx.translate(50, 10); 
+        ctx.lineWidth = 6; 
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineCap = 'round';
+        ctx.stroke(path2d); 
 
-            // fake perlin noise using sine waves
-            
-            // swaying
-            const swayX = Math.sin(t * 0.4) * 4 + Math.sin(t * 0.9) * 2;
-            const swayY = Math.sin(t * 0.5) * 3 + Math.sin(t * 1.1) * 2;
-            
-            // bumps
-            const bumpX = Math.sin(t * 3.2) * 1.5 + Math.sin(t * 4.7) * 1;
-            const bumpY = Math.sin(t * 2.8) * 2.0 + Math.sin(t * 5.1) * 1.5;
+        // inner line coordinates mapped to the svg space
+        const innerLines = new Path2D();
+        
+        innerLines.moveTo(215, 185);
+        innerLines.quadraticCurveTo(210, 230, 245, 235);
+        
+        innerLines.moveTo(100, 200);
+        innerLines.quadraticCurveTo(130, 205, 135, 240);
+        
+        innerLines.moveTo(110, 330);
+        innerLines.quadraticCurveTo(130, 300, 160, 295);
+        
+        innerLines.moveTo(310, 215);
+        innerLines.quadraticCurveTo(290, 220, 295, 245);
+        
+        ctx.stroke(innerLines);
+        const borderData = ctx.getImageData(0, 0, canvasSize, canvasSize).data;
 
-            // micro vibrations
-            const vibeX = Math.sin(t * 22) * 0.3;
-            const vibeY = Math.sin(t * 28) * 0.6;
+        // extract particles from the canvas data
+        const particles = [];
+        const colors = [];
+        const spacing = 3; 
 
-            // combine
-            const x = swayX + bumpX + vibeX;
-            const y = swayY + bumpY + vibeY;
+        const colorWhite = new THREE.Color(0xffffff);
+        const colorRed = new THREE.Color(0xcc0505);
 
-            // apply to landscape, keep scale at 1.08
-            landscape.style.transform = `scale(1.08) translate(${x}px, ${y}px)`;
+        for (let y = 0; y < canvasSize; y += spacing) {
+            for (let x = 0; x < canvasSize; x += spacing) {
+                const index = (y * canvasSize + x) * 4;
+                const isBorder = borderData[index + 3] > 128; 
+                const isBody = bodyData[index + 3] > 128;
 
-            requestAnimationFrame(animateRumble);
+                if (isBorder || isBody) {
+                    particles.push(x, -y, 0); 
+                    if (isBorder) {
+                        colors.push(colorWhite.r, colorWhite.g, colorWhite.b);
+                    } else {
+                        colors.push(colorRed.r, colorRed.g, colorRed.b);
+                    }
+                }
+            }
         }
 
-        // init
-        requestAnimationFrame(animateRumble);
+        // generate the 3d point cloud
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(particles, 3));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        // center the geometry
+        geometry.computeBoundingBox();
+        geometry.center();
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: 0 },
+                uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+            },
+            vertexShader: `
+                uniform float uTime;
+                uniform float uPixelRatio;
+                attribute vec3 color;
+                varying vec3 vColor;
+                varying float vZ;
+
+                void main() {
+                    vColor = color;
+                    vec3 pos = position;
+
+                    // swirl math
+                    float dist = length(pos.xy);
+                    float angle = atan(pos.y, pos.x);
+                    
+                    float wave1 = sin(pos.x * 0.02 + uTime * 1.2) * 5.0;
+                    float wave2 = cos(pos.y * 0.03 - uTime * 0.8) * 5.0;
+                    float swirl = sin(angle * 2.0 + dist * 0.01 - uTime * 1.5) * 6.0;
+                    
+                    pos.z += wave1 + wave2 + swirl;
+                    vZ = pos.z;
+
+                    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+                    
+                    // size adjustment based on color
+                    float pSize = (vColor.r > 0.9 && vColor.g > 0.9) ? 14.0 : 9.0;
+                    gl_PointSize = (pSize * uPixelRatio) * (200.0 / -mvPosition.z);
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vColor;
+                varying float vZ;
+
+                void main() {
+                    float dist = length(gl_PointCoord - vec2(0.5));
+                    if (dist > 0.5) discard;
+
+                    float alpha = smoothstep(0.5, 0.1, dist);
+                    float depthShade = clamp((vZ + 15.0) / 30.0, 0.4, 1.1);
+                    
+                    vec3 finalColor = vColor;
+                    if (vColor.r > 0.9 && vColor.g > 0.9) {
+                        finalColor *= 1.6; 
+                    } else {
+                        finalColor *= depthShade; 
+                    }
+
+                    gl_FragColor = vec4(finalColor, alpha);
+                }
+            `,
+            transparent: true,
+            depthWrite: false, 
+            blending: THREE.AdditiveBlending 
+        });
+
+        const pointCloud = new THREE.Points(geometry, material);
+        
+        // handle window resizing
+        function updateScale() {
+            let cloudScale = 1.3; 
+            if (window.innerWidth < 768) cloudScale = 0.65; 
+            else if (window.innerWidth < 1200) cloudScale = 1.0; 
+            pointCloud.scale.set(cloudScale, cloudScale, cloudScale);
+        }
+        updateScale();
+        scene.add(pointCloud);
+
+        // background embers
+        const embersGeo = new THREE.BufferGeometry();
+        const embersCount = 150;
+        const embersPos = new Float32Array(embersCount * 3);
+        for(let i = 0; i < embersCount * 3; i+=3) {
+            embersPos[i] = (Math.random() - 0.5) * 800;     
+            embersPos[i+1] = (Math.random() - 0.5) * 600;   
+            embersPos[i+2] = (Math.random() - 0.5) * 200;   
+        }
+        embersGeo.setAttribute('position', new THREE.BufferAttribute(embersPos, 3));
+        const embersMat = new THREE.PointsMaterial({
+            size: 2.5, color: 0xff3333, transparent: true, opacity: 0.6,
+            blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        const embers = new THREE.Points(embersGeo, embersMat);
+        scene.add(embers);
+
+        // render loop
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+
+            material.uniforms.uTime.value = elapsedTime;
+
+            // subtle wobble
+            pointCloud.rotation.y = Math.sin(elapsedTime * 0.2) * 0.1;
+            pointCloud.rotation.x = Math.cos(elapsedTime * 0.1) * 0.05;
+
+            const positions = embers.geometry.attributes.position.array;
+            for(let i = 1; i < embersCount * 3; i+=3) {
+                positions[i] += 0.3; 
+                positions[i-1] += Math.sin(elapsedTime + i) * 0.2; 
+                if (positions[i] > 300) {
+                    positions[i] = -300;
+                    positions[i-1] = (Math.random() - 0.5) * 800;
+                }
+            }
+            embers.geometry.attributes.position.needsUpdate = true;
+
+            composer.render();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            updateScale();
+        });
+
+        animate();
     </script>
 </body>
 </html>
